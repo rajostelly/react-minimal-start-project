@@ -1,0 +1,1 @@
+# react-minimal-start-project
