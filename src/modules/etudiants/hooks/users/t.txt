@@ -1,0 +1,59 @@
+import { useMutation } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
+import { useToast } from '@/contexts/toast.context';
+import { CreateEnterpriseDto } from '@/types';
+import { createEnterprise } from '../../api';
+import { HttpStatus } from '@/constants/Http-status.constant';
+import { TOAST_SEVERITY } from '@/constants';
+import { showBackdropLoader } from '../../../../components/ui/spinner/BackdropLoader';
+
+type UseCreateEnterpriseProps = {
+	action: VoidFunction;
+};
+
+export const createEnterprise = async (body: CreateEnterpriseDto) => {
+	const response = await axiosInstance.post(
+		`${URLS.enterprises}/create`,
+		body,
+	);
+	return response;
+};
+
+export const useCreateEnterprise = (props: UseCreateEnterpriseProps) => {
+	const { action } = props;
+	const { showToast } = useToast();
+
+	const mutation = useMutation({
+		// eslint-disable-next-line max-len
+		mutationFn: (mutateData: CreateEnterpriseDto) => createEnterprise(mutateData),
+		onSuccess: (response) => {
+			if (response?.status === HttpStatus.CREATED) {
+				showToast(
+					"Creation de l'entreprise réussi",
+					TOAST_SEVERITY.SUCCESS,
+					'Success',
+				);
+				action();
+			} else {
+				showToast(
+					'Une erreur est survenue pendant la soumission du formulaire...',
+					TOAST_SEVERITY.ERROR,
+					'Erreur',
+				);
+			}
+			showBackdropLoader(false);
+		},
+		onError: (err: AxiosError) => {
+			showToast(
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(err?.response?.data as any).message ||
+					'Une erreur est survenue pendant la soumission du formulaire...',
+				TOAST_SEVERITY.ERROR,
+				'Erreur',
+			);
+			showBackdropLoader(false);
+		},
+	});
+
+	return mutation;
+};
